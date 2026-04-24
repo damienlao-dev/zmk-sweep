@@ -14,6 +14,7 @@ jobs:
 
       - name: Cache west modules
         uses: actions/cache@v4
+        id: cache
         env:
           cache-name: cache-zephyr-modules
         with:
@@ -23,16 +24,18 @@ jobs:
             zephyr/
             bootloader/
             zmk/
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('manifest-dir/west.yml') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('config/west.yml') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
       - name: West Init
+        if: steps.cache.outputs.cache-hit != 'true'
         run: west init -l config
 
       - name: West Update
+        if: steps.cache.outputs.cache-hit != 'true'
         run: west update
 
       - name: West Zephyr export
@@ -44,7 +47,7 @@ jobs:
       - name: Cradio/Sweep Left Kconfig file
         run: cat build/zephyr/.config | grep -v "^#" | grep -v "^$"
 
-      - name: Rename zmk.uf2
+      - name: Rename zmk.uf2 (Left)
         run: cp build/zephyr/zmk.uf2 cradio_left_nice_nano_v2.uf2
 
       - name: Archive (Cradio/Sweep Left)
@@ -59,7 +62,7 @@ jobs:
       - name: Cradio/Sweep Right Kconfig file
         run: cat build/zephyr/.config | grep -v "^#" | grep -v "^$"
 
-      - name: Rename zmk.uf2
+      - name: Rename zmk.uf2 (Right)
         run: cp build/zephyr/zmk.uf2 cradio_right_nice_nano_v2.uf2
 
       - name: Archive (Cradio/Sweep Right)
